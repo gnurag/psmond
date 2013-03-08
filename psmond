@@ -4,24 +4,42 @@ import psutil
 import pyelasticsearch
 from pyelasticsearch import *
 import time
+from daemon import runner
 
 INDEX = 'psutils'
 DOCTYPE = 'PS'
 
-es  = ElasticSearch('http://localhost:9200/')
-psd = psutil.disk_io_counters()
-hostname = 'zeus'
+ES  = ElasticSearch('http://localhost:9200/')
 
-doc = {
-    'read_count': psd.read_count,
-    'write_count': psd.write_count,
-    'read_bytes': psd.read_bytes,
-    'write_bytes': psd.write_bytes,
-    'read_time': psd.read_time,
-    'write_time': psd.write_time,
-    'hostname': hostname,
-    'timestamp': time.time()
-    }
+class PSMonitor():
+    def __init__(self):
+        self.stdin_path   = '/dev/null'
+        self.stdout_path  = '/tmp/psmon.out'
+        self.stderr_path  = '/tmp/psmon.err'
+        self.pidfile_path =  '/tmp/psmond.pid'
+        self.pidfile_timeout = 5
 
-es.index(INDEX, DOCTYPE, doc)
+    def update(self):
+        psd = psutil.disk_io_counters()
+        hostname = 'zeus'
 
+        doc = {
+            'read_count': psd.read_count,
+            'write_count': psd.write_count,
+            'read_bytes': psd.read_bytes,
+            'write_bytes': psd.write_bytes,
+            'read_time': psd.read_time,
+            'write_time': psd.write_time,
+            'hostname': hostname,
+            'timestamp': time.time()
+            }
+        ES.index(INDEX, DOCTYPE, doc)
+
+    def run(self):
+        while True:
+            self.update()
+            time.sleep(5)
+
+psm = PSMonitor()
+daemon_runner = runner.DaemonRunner(psm)
+daemon_runner.do_action()
