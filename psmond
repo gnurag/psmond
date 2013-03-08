@@ -5,23 +5,29 @@ import pyelasticsearch
 from pyelasticsearch import *
 import time
 from daemon import runner
+import socket
+import ConfigParser
 
-INDEX = 'psutils'
-DOCTYPE = 'PS'
+# Configuration section
+config = ConfigParser.ConfigParser()
+config.read('psmond.cfg')
 
-ES  = ElasticSearch('http://localhost:9200/')
+URL      = config.get('Server', 'server')
+INDEX    = config.get('Settings', 'index')
+DOCTYPE  = 'PS'
+HOSTNAME = socket.gethostname()
+ES       = ElasticSearch(URL)
 
 class PSMonitor():
     def __init__(self):
         self.stdin_path   = '/dev/null'
-        self.stdout_path  = '/tmp/psmon.out'
-        self.stderr_path  = '/tmp/psmon.err'
-        self.pidfile_path =  '/tmp/psmond.pid'
-        self.pidfile_timeout = 5
+        self.stdout_path  = config.get('Settings', 'stdout_path')
+        self.stderr_path  = config.get('Settings', 'stderr_path')
+        self.pidfile_path =  config.get('Settings', 'pidfile_path')
+        self.pidfile_timeout = config.get('Settings', 'pidfile_timeout')
 
     def update(self):
         psd = psutil.disk_io_counters()
-        hostname = 'zeus'
 
         doc = {
             'read_count': psd.read_count,
@@ -30,7 +36,7 @@ class PSMonitor():
             'write_bytes': psd.write_bytes,
             'read_time': psd.read_time,
             'write_time': psd.write_time,
-            'hostname': hostname,
+            'hostname': HOSTNAME,
             'timestamp': time.time()
             }
         ES.index(INDEX, DOCTYPE, doc)
@@ -38,7 +44,7 @@ class PSMonitor():
     def run(self):
         while True:
             self.update()
-            time.sleep(5)
+            time.sleep(config.get('Settings', 'update_interval'))
 
 psm = PSMonitor()
 daemon_runner = runner.DaemonRunner(psm)
