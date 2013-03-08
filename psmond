@@ -24,7 +24,7 @@ class PSMonitor():
         self.stdout_path  = config.get('Settings', 'stdout_path')
         self.stderr_path  = config.get('Settings', 'stderr_path')
         self.pidfile_path =  config.get('Settings', 'pidfile_path')
-        self.pidfile_timeout = config.get('Settings', 'pidfile_timeout')
+        self.pidfile_timeout = int(config.get('Settings', 'pidfile_timeout'))
 
     def update(self):
         psd = psutil.disk_io_counters()
@@ -44,7 +44,7 @@ class PSMonitor():
     def run(self):
         while True:
             self.update()
-            time.sleep(config.get('Settings', 'update_interval'))
+            time.sleep(int(config.get('Settings', 'update_interval')))
 
 psm = PSMonitor()
 daemon_runner = runner.DaemonRunner(psm)
