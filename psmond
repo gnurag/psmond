@@ -28,16 +28,24 @@ class PSMonitor():
 
     def update(self):
         psd = psutil.disk_io_counters()
+	nsd = psutil.network_io_counters()
 
         doc = {
-            'read_count': psd.read_count,
-            'write_count': psd.write_count,
-            'read_bytes': psd.read_bytes,
-            'write_bytes': psd.write_bytes,
-            'read_time': psd.read_time,
-            'write_time': psd.write_time,
-            'hostname': HOSTNAME,
-            'timestamp': time.time()
+	   'hostname': HOSTNAME,
+           'timestamp': time.time(),
+            'io': {'read_count': psd.read_count,
+	        'write_count': psd.write_count,
+         	'read_bytes': psd.read_bytes,
+	        'write_bytes': psd.write_bytes,
+        	'read_time': psd.read_time,
+            	'write_time': psd.write_time
+		},
+	 	
+            'netio': {'bytes_sent': nsd.bytes_sent,
+	        'bytes_recv': nsd.bytes_recv,
+	        'packets_sent': nsd.packets_sent,
+	        'packets_recv': nsd.packets_recv
+		}
             }
         ES.index(INDEX, DOCTYPE, doc)
 
