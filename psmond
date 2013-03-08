@@ -4,13 +4,14 @@ import psutil
 import pyelasticsearch
 from pyelasticsearch import *
 import time
+import socket
 
 INDEX = 'psutils'
 DOCTYPE = 'PS'
 
 es  = ElasticSearch('http://localhost:9200/')
 psd = psutil.disk_io_counters()
-hostname = 'zeus'
+hostname = socket.gethostname()
 
 doc = {
     'read_count': psd.read_count,
