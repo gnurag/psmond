@@ -5,11 +5,19 @@ import pyelasticsearch
 from pyelasticsearch import *
 import time
 import socket
+import ConfigParser
+
 
 INDEX = 'psutils'
 DOCTYPE = 'PS'
+config = ConfigParser.ConfigParser()
+config.read('psmond.cfg')
 
-es  = ElasticSearch('http://localhost:9200/')
+server = config.get('Server', 'server')
+port = config.get('Server', 'port')
+url = 'http://'+server+":"+port
+
+es  = ElasticSearch(url)
 psd = psutil.disk_io_counters()
 hostname = socket.gethostname()
 
